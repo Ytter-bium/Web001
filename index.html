@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Path · Intelligent autonomous recycling robot</title>
+
+    <!-- ==================== CSS Styles ==================== -->
+    <style>
+        /* ---------- CSS Variables / Design Tokens ---------- */
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --accent-1: #ff6b6b;
+            --accent-2: #4ecdc4;
+            --accent-3: #ffe66d;
+            --accent-4: #a29bfe;
+            --accent-5: #fd79a8;
+            --accent-6: #74b9ff;
+            --text-light: #f0f0f0;
+            --text-muted: #b0b0c0;
+            --nav-bg: rgba(20, 20, 40, 0.85);
+            --transition-speed: 0.4s;
+            --font-main: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            --font-display: 'Georgia', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+        }
+
+        /* ---------- Global Reset ---------- */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+
+        /* ---------- 完全透明的页头 ---------- */
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 90;
+            /* 全透明背景，无边框 */
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+            padding: 0.8rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s ease;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header-logo .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #ff9800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #1a2a3a;
+            background-image: url('images/logo-placeholder.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .header-logo .logo-text {
+            background: linear-gradient(135deg, #ffffff 0%, #d0d0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            list-style: none;
+        }
+
+        .header-nav a {
+            /* 按钮化样式，增强悬停反馈 */
+            display: inline-block;
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.25s ease, text-shadow 0.3s ease;
+            position: relative;
+        }
+
+        /* 悬停反馈：背景变淡红色、文字变亮、微上浮、外加发光 */
+        .header-nav a:hover {
+            background: rgba(255, 107, 107, 0.18);
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 107, 107, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* 保留底部指示线动画，但位置微调 */
+        .header-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1.5px;
+            background: var(--accent-1);
+            transition: width 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .header-nav a:hover::after {
+            width: 60%;
+        }
+
+        /* 移动端菜单按钮 */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.8rem;
+            cursor: pointer;
+            z-index: 91;
+        }
+
+        /* ---------- 页面区域（6页） ---------- */
+        .page-section {
+            min-height: 100vh;
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+            transition: background var(--transition-speed) ease;
+            padding-top: 5rem; /* 为固定页头留出空间 */
+        }
+
+        /* ===== 产品页左右布局 ===== */
+        .product-layout {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            max-width: 1100px;        /* 加宽以适应两栏 */
+            margin: 0 auto;
+            text-align: left;         /* 文字改为左对齐 */
+        }
+
+        /* 左侧图片区 */
+        .product-image {
+            flex: 1;
+            min-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        /* 右侧文字区 */
+        .product-info {
+            flex: 1;
+            min-width: 500px;
+        }
+
+        /* 覆盖副标题的居中样式，改为左对齐，并适当放宽宽度限制 */
+        .product-info .page-subtitle {
+            margin: 0 0 2rem 0;       /* 移除居中，改为向下留间距 */
+            max-width: 100%;           /* 在右侧区域内不受限 */
+        }
+
+        /* 功能列表样式 */
+        .feature-list {
+            list-style: none;               /* 去掉默认圆点 */
+            padding: 0;
+            margin: 2rem 0 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;                    /* 条目间距 */
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 1.8rem;           /* 给自定义符号留空 */
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            transition: color 0.3s;
+        }
+
+        /* 自定义符号（小箭头） */
+        .feature-list li::before {
+            content: '▹';                  /* 或使用 ✓ → ▸ 等 */
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--accent-2);        /* 青色图标 */
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* 鼠标悬停时文字变亮 */
+        .feature-list li:hover {
+            color: #ffffff;
+        }
+
+        .page-section:nth-child(1) { background: linear-gradient(160deg, #0f0f1a 0%, #1a1a35 40%, #0d0d25 100%); }
+        #page-home {
+            background: url('images/banner-bg.jpg') no-repeat center center / cover;
+            background-color: #0f0f1a;
+            position: relative;
+        }
+        #page-home::before {
+            content: '';                          /* 必须！否则伪元素不生成 */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);      /* 半透明黑色，0.4为透明度可调 */
+            z-index: 0;                           /* 处于背景与内容之间 */
+            pointer-events: none;                 /* 不阻挡任何点击事件 */
+        }
+        .page-section:nth-child(2) { background: linear-gradient(200deg, #1a1a2e 0%, #1e1a3a 40%, #120f28 100%); }
+        .page-section:nth-child(3) { background: linear-gradient(200deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+        .page-section:nth-child(4) { background: linear-gradient(180deg, #0f0f1a 0%, #1b1b3a 30%, #0a0a20 100%); }
+        .page-section:nth-child(5) { background: linear-gradient(220deg, #1a1a2e 0%, #1a1a3a 40%, #0d0d28 100%); }
+        .page-section:nth-child(6) { background: linear-gradient(160deg, #0f0f1a 0%, #1e1e38 50%, #0a0a1e 100%); }
+
+        /* ---------- 装饰背景元素 ---------- */
+        .bg-decoration {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatDecoration 12s ease-in-out infinite;
+        }
+        .bg-decoration.circle-1 { width: 400px; height: 400px; background: var(--accent-1); top: -10%; right: -8%; animation-delay: 0s; }
+        .bg-decoration.circle-2 { width: 350px; height: 350px; background: var(--accent-2); bottom: -12%; left: -6%; animation-delay: -4s; }
+        .bg-decoration.circle-3 { width: 300px; height: 300px; background: var(--accent-4); top: 40%; right: -10%; animation-delay: -8s; }
+        .bg-decoration.circle-4 { width: 280px; height: 280px; background: var(--accent-5); bottom: -8%; right: 15%; animation-delay: -6s; }
+        .bg-decoration.circle-5 { width: 320px; height: 320px; background: var(--accent-3); top: -8%; left: -5%; animation-delay: -3s; }
+        .bg-decoration.circle-6 { width: 260px; height: 260px; background: var(--accent-6); bottom: -10%; right: -6%; animation-delay: -7s; }
+
+        @keyframes floatDecoration {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -25px) scale(1.08); }
+            50% { transform: translate(-20px, 20px) scale(0.94); }
+            75% { transform: translate(-35px, -15px) scale(1.05); }
+        }
+
+        /* ---------- 内容容器 ---------- */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeInUp 0.9s ease-out both;
+        }
+
+        .page-section:nth-child(1) .content-wrapper { animation-delay: 0.1s; }
+        .page-section:nth-child(2) .content-wrapper { animation-delay: 0.15s; }
+        .page-section:nth-child(3) .content-wrapper { animation-delay: 0.2s; }
+        .page-section:nth-child(4) .content-wrapper { animation-delay: 0.2s; }
+        .page-section:nth-child(5) .content-wrapper { animation-delay: 0.2s; }
+        .page-section:nth-child(6) .content-wrapper { animation-delay: 0.2s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-tag {
+            display: inline-block;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            border: 3px solid rgba(78, 205, 196, 0.6);
+            padding: 0.4em 1.2em;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            background: rgba(78, 205, 196, 0.06);
+        }
+        /* 仅移动第一页的小标签 */
+        #page-home .page-tag {
+            position: relative;
+            top: -130px;      
+        }
+        .page-tag.accent-purple {
+            color: var(--accent-4);
+            border-color: rgba(162, 155, 254, 0.4);
+            background: rgba(162, 155, 254, 0.06);
+        }
+        .page-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.9em 2.2em;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-primary {
+            background: var(--accent-1);
+            color: #fff;
+            border-color: var(--accent-1);
+            box-shadow: 0 8px 30px rgba(255, 107, 107, 0.3);
+        }
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--accent-1);
+            box-shadow: 0 12px 40px rgba(255, 107, 107, 0.45);
+            transform: translateY(-3px);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.5);
+            margin-left: 1rem;
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.15);
+        }
+
+        .innovation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 780px;
+            margin: 0 auto;
+        }
+        .innovation-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s ease;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+        .innovation-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-4), var(--accent-2), var(--accent-5));
+            border-radius: 0 0 8px 8px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .innovation-card:hover::before { opacity: 1; }
+        .innovation-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        }
+        .innovation-card .card-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: bounceIcon 2s ease-in-out infinite;
+        }
+        .innovation-card:nth-child(2) .card-icon { animation-delay: -0.5s; }
+        .innovation-card:nth-child(3) .card-icon { animation-delay: -1s; }
+        .innovation-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600; color: #fff; }
+        .innovation-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+        .innovation-card .highlight-num {
+            position: absolute;
+            top: 0.8rem; right: 1rem;
+            font-size: 3rem; font-weight: 900;
+            color: rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+            line-height: 1;
+            font-family: var(--font-display);
+        }
+
+        @keyframes bounceIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s ease;
+            cursor: default;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+        .card .card-icon { font-size: 2.8rem; margin-bottom: 1rem; display: block; animation: bounceIcon 2s ease-in-out infinite; }
+        .card:nth-child(2) .card-icon { animation-delay: -0.5s; }
+        .card:nth-child(3) .card-icon { animation-delay: -1s; }
+        .card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600; }
+        .card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .portfolio-item {
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+        }
+        .portfolio-item:hover {
+            transform: scale(1.04);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+        /*.portfolio-item .img-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 700; color: #fff; letter-spacing: 2px;
+        }
+        .portfolio-item:nth-child(1) .img-placeholder { background: linear-gradient(135deg, #ff6b6b, #c0392b); }
+        .portfolio-item:nth-child(2) .img-placeholder { background: linear-gradient(135deg, #4ecdc4, #2c7a7b); }
+        .portfolio-item:nth-child(3) .img-placeholder { background: linear-gradient(135deg, #ffe66d, #d4a80b); }
+        .portfolio-item:nth-child(4) .img-placeholder { background: linear-gradient(135deg, #a29bfe, #5b4fcf); }
+        .portfolio-item:nth-child(5) .img-placeholder { background: linear-gradient(135deg, #fd79a8, #c44569); }
+        .portfolio-item:nth-child(6) .img-placeholder { background: linear-gradient(135deg, #74b9ff, #3b7dd8); }*/
+        .portfolio-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.35s ease;
+            font-size: 0.9rem; letter-spacing: 2px;
+        }
+        .portfolio-item:hover .portfolio-overlay { opacity: 1; }
+        /* 视频样式 */
+        .portfolio-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 16px;          /* 与 .portfolio-item 圆角保持一致 */
+        }
+
+        /*.contact-form {
+            display: flex; flex-direction: column; gap: 1rem;
+            max-width: 480px; width: 100%; margin: 0 auto;
+        }
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%; padding: 1rem 1.3rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff; font-size: 0.95rem; font-family: var(--font-main);
+            resize: vertical; transition: all 0.3s ease; outline: none;
+            backdrop-filter: blur(8px);
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: var(--accent-2);
+            box-shadow: 0 0 25px rgba(78, 205, 196, 0.2);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .contact-form textarea { min-height: 110px; resize: none; }
+        .contact-form .btn { align-self: center; margin-top: 0.5rem; }*/
+        /* ==================== 联系卡片网格 ==================== */
+        .contact-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);   /* 2 列 */
+            gap: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* 单个联系卡片 */
+        .contact-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.8rem 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s ease;
+            cursor: default;
+        }
+
+        /* 卡片悬停效果（轻量） */
+        .contact-card:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        /* 卡片图标 */
+        .contact-card .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.6rem;
+            display: block;
+        }
+
+        /* 卡片标题 */
+        .contact-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* 卡片信息文字 */
+        .contact-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            word-break: break-word;       /* 长邮件地址可换行 */
+        }
+
+        .nav-indicator {
+            position: fixed; right: 1.5rem; top: 50%;
+            transform: translateY(-50%); z-index: 100;
+            display: flex; flex-direction: column; gap: 0.8rem;
+        }
+        .nav-dot {
+            width: 11px; height: 11px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer; transition: all 0.35s ease;
+            position: relative; border: 2px solid transparent;
+        }
+        .nav-dot:hover { background: rgba(255, 255, 255, 0.7); transform: scale(1.3); }
+        .nav-dot.active {
+            background: var(--accent-1); border-color: #fff;
+            box-shadow: 0 0 18px rgba(255, 107, 107, 0.7);
+            width: 13px; height: 13px;
+        }
+        .nav-dot .dot-label {
+            position: absolute; right: 25px; top: 50%; transform: translateY(-50%);
+            white-space: nowrap; font-size: 0.75rem; color: #fff;
+            background: rgba(0, 0, 0, 0.7); padding: 0.3em 0.8em;
+            border-radius: 20px; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .nav-dot:hover .dot-label { opacity: 1; }
+
+        .scroll-hint {
+            position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            z-index: 2; animation: bounceDown 2s ease-in-out infinite;
+            cursor: pointer; opacity: 0.7; transition: opacity 0.3s;
+        }
+        .scroll-hint:hover { opacity: 1; }
+        .scroll-hint span { display: block; font-size: 1.8rem; color: #fff; }
+        @keyframes bounceDown {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(16px); }
+        }
+
+        /* ---------- 响应式设计 ---------- */
+        @media (max-width: 768px) {
+            .site-header {
+                padding: 0.8rem 1.2rem;
+            }
+            .header-nav {
+                gap: 0.2rem;
+            }
+            .header-nav a {
+                font-size: 0.7rem;
+                padding: 0.4em 0.6em;
+            }
+            .header-logo {
+                font-size: 1.1rem;
+            }
+            .header-logo .logo-icon {
+                font-size: 1.5rem;
+            }
+
+            .page-section {
+                padding: 1.5rem;
+                height: 100vh;
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                padding-top: 4.5rem;
+            }
+            .page-title { font-size: 2rem; }
+            .page-subtitle { font-size: 0.9rem; }
+            .innovation-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+            .innovation-grid .innovation-card:last-child {
+                grid-column: 1 / -1;
+                max-width: 320px;
+                justify-self: center;
+            }
+            .cards-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+            .portfolio-grid { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+            /*.portfolio-item .img-placeholder { font-size: 1.6rem; }*/
+            .btn-outline { margin-left: 0; margin-top: 0.8rem; }
+            .btn-group { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+            .nav-indicator { right: 0.6rem; gap: 0.6rem; }
+            .nav-dot { width: 9px; height: 9px; }
+            .nav-dot.active { width: 11px; height: 11px; }
+            .product-layout {
+                flex-direction: column;
+                text-align: center;      /* 移动端恢复居中更整洁 */
+                gap: 1.5rem;
+            }
+            .product-image {
+                min-width: 100%;
+                order: -1;               /* 图片显示在上方 */
+            }
+            .product-info .page-title,
+            .product-info .page-subtitle {
+                text-align: center;      /* 移动端标题居中 */
+            }
+            .product-info .page-subtitle {
+                margin: 0 auto 2rem;     /* 居中 */
+                max-width: 550px;        /* 恢复有限的阅读宽度 */
+            }
+            .feature-list {
+                align-items: center;        /* 整体居中 */
+            }
+            .feature-list li {
+                font-size: 0.9rem;
+                padding-left: 1.5rem;       /* 稍微收紧间距 */
+            }
+
+            .contact-cards-grid {
+                gap: 1rem;
+            }
+            .contact-card {
+                padding: 1.2rem 1rem;
+            }
+            .contact-card .card-icon {
+                font-size: 1.8rem;
+            }            
+        }
+
+        @media (max-width: 480px) {
+            .header-nav {
+                display: none; /* 小屏幕上隐藏文字导航，可后续添加菜单交互 */
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .innovation-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+            .innovation-grid .innovation-card:last-child { grid-column: 1; max-width: 100%; }
+            .cards-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+            .portfolio-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+            .page-title { font-size: 1.7rem; }
+            .page-tag { font-size: 0.7rem; letter-spacing: 2px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================== 完全透明的页头 ==================== -->
+    <header class="site-header">
+        <a href="#page-home" class="header-logo">
+            <img src="images/logo.png" alt="Creative Studio Logo" class="logo-icon">
+            <span class="logo-text">Clear Path</span>
+        </a>
+        <nav>
+            <ul class="header-nav">
+                <li><a href="#page-home">Home</a></li>
+                <li><a href="#page-innovation">Innovation</a></li>
+                <li><a href="#page-about">Company</a></li>
+                <li><a href="#page-products">Product</a></li>
+                <li><a href="#page-portfolio">Showcase</a></li>
+                <li><a href="#page-contact">Contact</a></li>
+            </ul>
+            <button class="menu-toggle" aria-label="Menu">☰</button>
+        </nav>
+    </header>
+
+    <!-- ==================== 第1页：网站横幅 ==================== -->
+    <section class="page-section" id="page-home">
+        <div class="bg-decoration circle-1"></div>
+        <div class="bg-decoration circle-2"></div>
+
+        <div class="content-wrapper">
+            <span class="page-tag">✦ Welcome to</span>
+            <h1 class="page-title">Intelligent Autonomous Recycling Robot System</h1>
+            <p class="page-subtitle">
+                Autonomously navigates complex paths, detects colored blocks, and recovers them efficiently. Perfect for industrial recycling and STEM education
+            </p>
+            <div class="btn-group">
+                <a href="#page-innovation" class="btn btn-primary">Explore Innovation</a>
+                <a href="#page-contact" class="btn btn-outline">Contact Us</a>
+            </div>
+        </div>
+        <div class="scroll-hint" title="Scroll down">
+            <span>↓</span>
+        </div>
+    </section>
+
+    <!-- ==================== 第2页：创新点 ==================== -->
+    <section class="page-section" id="page-innovation">
+        <div class="bg-decoration circle-3"></div>
+        <div class="bg-decoration circle-5"></div>
+
+        <div class="content-wrapper">
+            <span class="page-tag accent-purple">⚡ Innovation Driven</span>
+            <h1 class="page-title">Break Boundaries<br>Lead Change</h1>
+            <p class="page-subtitle">
+                In the era of intelligent robotics, we redefine task prioritization through dynamic, real-time decision-making and flexible user control, delivering unmatched adaptability and precision.
+            </p>
+
+            <div class="innovation-grid">
+                <div class="innovation-card">
+                    <span class="highlight-num">01</span>
+                    <span class="card-icon">🚀</span>
+                    <h3>Autonomous Dynamic Priority</h3>
+                    <p>Real-time decision making enables robots to adapt to unknown block distributions without preset sequences. </p>
+                </div>
+                <div class="innovation-card">
+                    <span class="highlight-num"></span>
+                    <span class="card-icon">💡</span>
+                    <h3>Adaptive Synergy</h3>
+                    <p><-Bridges dynamic reactivity and user rules. Auto-switches modes to eliminate idle time while keeping full human control.-></p>
+                </div>
+                <div class="innovation-card">
+                    <span class="highlight-num">02</span>
+                    <span class="card-icon">⚡</span>
+                    <h3>User-Defined Priority</h3>
+                    <p>Strict order control allows users to pre-assign priority levels. The robot always locks onto and processes the highest-priority block first stable, and predictable behavior — ideal for rule-based competitions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 第3页：公司简介 ==================== -->
+    <section class="page-section" id="page-about">
+        <div class="bg-decoration circle-6"></div>
+        <div class="bg-decoration circle-2"></div>
+
+        <div class="content-wrapper">
+            <span class="page-tag">● About Us</span>
+            <h1 class="page-title">Company Profile</h1>
+            <p class="page-subtitle">
+                Clear Path is a deep-tech startup founded in 2020 by engineers from leading robotics research labs. We specialize in intelligent scheduling algorithms and autonomous material recovery systems.
+<br>Our core innovation — dual-mode priority scheduling (autonomous dynamic & user-defined) — allows robots to either adapt to real-time environments or follow strict task orders. This flexibility makes our robots ideal for educational competitions, industrial sorting lines, and research labs.
+            </p>
+            <p class="page-subtitle" style="font-size:0.95rem;color:#a0a0b8;">
+                Served over <b style="color:#fff;">200+</b> brands &nbsp;|&nbsp;
+                Covering <b style="color:#fff;">15+</b> industries &nbsp;|&nbsp;
+                Client satisfaction rate <b style="color:#fff;">98%</b>
+            </p>
+        </div>
+    </section>
+
+    <!-- ==================== 第4页：产品信息 ==================== -->
+    <section class="page-section" id="page-products">
+        <div class="bg-decoration circle-1"></div>
+        <div class="bg-decoration circle-4"></div>
+
+        <div class="content-wrapper product-layout">
+            <!-- 左侧：产品图片 -->
+            <div class="product-image">
+                <img src="images/product-main.jpg" alt="Product Image" />
+            </div>
+
+            <!-- 右侧：文字介绍 -->
+            <div class="product-info">
+                <span class="page-tag">◆ Product Info</span>
+                <h1 class="page-title">Products</h1>
+                <p class="page-subtitle">Next-gen intelligent block recovery robot featuring dual-mode priority scheduling. Equipped with a 3-DOF gripper, a sorting bin, and real-time decision engine.</p>
+                <!-- 你可以在这里添加额外的产品描述或其他内容 -->
+                 <ul class="feature-list">
+                    <li>Dual-mode priority scheduling (autonomous dynamic / user-defined)</li>
+                    <li>Optical tracing line sensor with 25cm range</li>
+                    <li>Color vision camera (recognizes red, yellow, blue blocks)</li>
+                    <li>Swappable 6000mAh Li-ion battery (10h runtime)</li>
+                    <li>One multi-compartment sorting bin</li>
+                    <li>Real-time dashboard via Bluetooth</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 第5页：展示效果 ==================== -->
+    <section class="page-section" id="page-portfolio">
+        <div class="bg-decoration circle-3"></div>
+        <div class="bg-decoration circle-1"></div>
+
+        <div class="content-wrapper">
+            <span class="page-tag">■ Showcase</span>
+            <h1 class="page-title">Recent Cases</h1>
+            <p class="page-subtitle">Each project is a unique creative journey. Click for details.</p>
+
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-1.jpg">
+                        <source src="videos/case-1.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case A</div>
+                </div>
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-2.jpg">
+                        <source src="videos/case-2.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case B</div>
+                </div>
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-3.jpg">
+                        <source src="videos/case-3.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case C</div>
+                </div>
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-4.jpg">
+                        <source src="videos/case-4.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case D</div>
+                </div>
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-5.jpg">
+                        <source src="videos/case-5.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case E</div>
+                </div>
+                <div class="portfolio-item">
+                    <video class="portfolio-video" muted loop playsinline preload="none"
+                        poster="images/poster-6.jpg">
+                        <source src="videos/case-6.mp4" type="video/mp4">
+                    </video>
+                    <div class="portfolio-overlay">Case F</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 第6页：联系方式 ==================== -->
+    <section class="page-section" id="page-contact">
+        <div class="bg-decoration circle-2"></div>
+        <div class="bg-decoration circle-4"></div>
+
+        <div class="content-wrapper">
+            <span class="page-tag">✉ Contact Us</span>
+            <h1 class="page-title">Contact Us</h1>
+            <p class="page-subtitle">Feel free to reach out through any of the channels below</p>
+
+            <!-- 联系卡片网格 -->
+            <div class="contact-cards-grid">
+                <!-- 卡片 1：Email -->
+                <div class="contact-card">
+                    <span class="card-icon">📧</span>
+                    <h3>Email</h3>
+                    <p>3306076852@qq.com</p>
+                </div>
+
+                <!-- 卡片 2：Phone -->
+                <div class="contact-card">
+                    <span class="card-icon">📞</span>
+                    <h3>Phone</h3>
+                    <p>+8615553455559</p>
+                </div>
+
+                <!-- 卡片 3：Address -->
+                <div class="contact-card">
+                    <span class="card-icon">📍</span>
+                    <h3>Address</h3>
+                    <p>XDU, Xi'an, Shaanxi, China</p>
+                </div>
+
+                <!-- 卡片 4：Social / QQ -->
+                <div class="contact-card">
+                    <span class="card-icon">💬</span>
+                    <h3>Social / QQ</h3>
+                    <p>@3306076852</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 右侧导航指示器 ==================== -->
+    <nav class="nav-indicator" aria-label="Page navigation">
+        <a href="#page-home" class="nav-dot active" data-target="page-home" title="Home">
+            <span class="dot-label">Home</span>
+        </a>
+        <a href="#page-innovation" class="nav-dot" data-target="page-innovation" title="Innovation">
+            <span class="dot-label">Innovation</span>
+        </a>
+        <a href="#page-about" class="nav-dot" data-target="page-about" title="Company">
+            <span class="dot-label">Company</span>
+        </a>
+        <a href="#page-products" class="nav-dot" data-target="page-products" title="Products">
+            <span class="dot-label">Products</span>
+        </a>
+        <a href="#page-portfolio" class="nav-dot" data-target="page-portfolio" title="Portfolio">
+            <span class="dot-label">Portfolio</span>
+        </a>
+        <a href="#page-contact" class="nav-dot" data-target="page-contact" title="Contact">
+            <span class="dot-label">Contact</span>
+        </a>
+    </nav>
+
+    <!-- ==================== JavaScript: 导航高亮 ==================== -->
+    <script>
+        const sections = document.querySelectorAll('.page-section');
+        const navDots = document.querySelectorAll('.nav-dot');
+
+        const observerOptions = {
+            root: null,
+            threshold: 0.5
+        };
+
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const activeId = entry.target.id;
+                    navDots.forEach(dot => dot.classList.remove('active'));
+                    const activeDot = document.querySelector(`.nav-dot[data-target="${activeId}"]`);
+                    if (activeDot) {
+                        activeDot.classList.add('active');
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        sections.forEach(section => observer.observe(section));
+
+        navDots.forEach(dot => {
+            dot.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        const scrollHint = document.querySelector('.scroll-hint');
+        if (scrollHint) {
+            scrollHint.addEventListener('click', () => {
+                const nextSection = document.getElementById('page-innovation');
+                if (nextSection) {
+                    nextSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+
+        document.querySelectorAll('.portfolio-video').forEach(video => {
+            const item = video.closest('.portfolio-item');
+            if (!item) return;
+
+            item.addEventListener('mouseenter', () => {
+                video.play().catch(() => {});
+            });
+            item.addEventListener('mouseleave', () => {
+                video.pause();
+                video.currentTime = 0; // 重置到开头，可选
+            });
+        });
+
+        console.log('✨ Fullscreen sliding website ready – with fully transparent header and enhanced nav hover effects');
+    </script>
+</body>
+</html>

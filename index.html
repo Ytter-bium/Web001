@@ -403,6 +403,7 @@
             color: #fff;
             border-color: var(--accent-1);
             box-shadow: 0 8px 30px rgba(255, 107, 107, 0.3);
+            top: 80px;    
         }
         .btn-primary:hover {
             background: transparent;
@@ -415,6 +416,7 @@
             color: #fff;
             border-color: rgba(255, 255, 255, 0.5);
             margin-left: 1rem;
+            top: 80px;    
         }
         .btn-outline:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -552,9 +554,10 @@
         .portfolio-overlay {
             position: absolute; inset: 0;
             background: rgba(0, 0, 0, 0.55);
-            display: flex; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0px;
             opacity: 0; transition: opacity 0.35s ease;
             font-size: 0.9rem; letter-spacing: 2px;
+            line-height: 1.0;
         }
         .portfolio-item:hover .portfolio-overlay { opacity: 1; }
         /* 视频样式 */
@@ -564,6 +567,15 @@
             object-fit: cover;
             display: block;
             border-radius: 16px;          /* 与 .portfolio-item 圆角保持一致 */
+        }
+        .overlay-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            /*margin-bottom: 0.5rem;*/
+        }
+        .overlay-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
         /*.contact-form {
@@ -919,42 +931,66 @@
                         poster="images/poster-1.jpg">
                         <source src="videos/case-1.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case A</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case A</span><br>
+                        <span class="overlay-subtitle">Right-angle intersection recognition. 
+                            <br><br>The sensor on the right detected a distinct black line, so judged it to be a right Angle</span>
+                    </div>
                 </div>
                 <div class="portfolio-item">
                     <video class="portfolio-video" muted loop playsinline preload="none"
                         poster="images/poster-2.jpg">
                         <source src="videos/case-2.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case B</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case B</span><br>
+                        <span class="overlay-subtitle">Intersection identification
+                            <br><br>All the sensors detected a distinct black line, so determined it to be a crossroads</span>
+                    </div>
                 </div>
                 <div class="portfolio-item">
                     <video class="portfolio-video" muted loop playsinline preload="none"
                         poster="images/poster-3.jpg">
                         <source src="videos/case-3.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case C</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case C</span><br>
+                        <span class="overlay-subtitle">T-junction recognition
+                            <br><br>The sensors on the right and in front both detected obvious black lines, so determined it to be a T-junction</span>
+                    </div>
                 </div>
                 <div class="portfolio-item">
                     <video class="portfolio-video" muted loop playsinline preload="none"
                         poster="images/poster-4.jpg">
                         <source src="videos/case-4.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case D</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case D</span><br>
+                        <span class="overlay-subtitle">Red object block recognition and grasping(side)
+                            <br><br>After entering the T-junction, it starts to determine whether there are any blocks and then grabs them after detecting their color</span>
+                    </div>
                 </div>
                 <div class="portfolio-item">
                     <video class="portfolio-video" muted loop playsinline preload="none"
                         poster="images/poster-5.jpg">
                         <source src="videos/case-5.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case E</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case E</span><br>
+                        <span class="overlay-subtitle">Red object block recognition and grasping(front)
+                            <br><br>After entering the T-junction, it starts to determine whether there are any blocks and then grabs them after detecting their color</span>
+                    </div>
                 </div>
                 <div class="portfolio-item">
                     <video class="portfolio-video" muted loop playsinline preload="none"
                         poster="images/poster-6.jpg">
                         <source src="videos/case-6.mp4" type="video/mp4">
                     </video>
-                    <div class="portfolio-overlay">Case F</div>
+                    <div class="portfolio-overlay">
+                        <span class="overlay-title">Case F</span><br>
+                        <span class="overlay-subtitle">Obstacle avoidance
+                            <br><br>The ultrasonic sensor detects an obstacle ahead and executes a detour to avoid it</span>
+                    </div>
                 </div>
             </div>
         </div>
